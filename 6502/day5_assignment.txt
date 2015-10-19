@@ -1,0 +1,125 @@
+define x 	   $02
+define y	   $04
+define ans_addr	   $00
+define temp_addr   $02
+define temp_addr_2   $04
+
+LDA #x
+PHA 
+LDA #y
+PHA 
+JSR c
+PLA ; get result
+STA ans_addr
+PLA ; throw away x
+BRK
+
+;
+;
+; c(x,y) = b(x) + 2 * a(y)
+; 2A
+c:
+	;2 * a(y)
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+	;get a
+	PHA
+	JSR a
+	STA temp_addr
+	;temp_addr value is the return value of a
+	ADC temp_addr ;adds a two times, 2a
+	PHA
+
+	;b(x)
+	LDA #x ;loads accumulator with variable x
+	PHA
+	JSR b
+	PLA
+	STA temp_addr ;put b(x) to temp_addr
+
+	PLA
+	ADC temp_addr ;add 2*a(y) to temp_addr
+	STA temp_addr ;put final val into A
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+
+
+	
+
+;
+;
+; a(x) = 2x + 3
+;
+a:
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+	STA temp_addr
+	ADC temp_addr
+	ADC #$03
+	STA $0100, Y
+	RTS
+
+;
+;
+; b(x) = a(x+2) + a(x+1)
+;
+b:
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	ADC #$01	
+	PHA ; Push x+1 to the stack as an argument for f.
+	JSR a
+
+	TSX
+	TXA
+	CLC
+	ADC #$04
+	TAY
+	LDA $0100, Y
+		
+	ADC #$02   ; x + 2
+	PHA ; Push x+2 to the stack as an argument for a.
+
+	JSR a
+	
+	PLA				; a(x + 2)
+	STA temp_addr   
+	PLA				; a(x + 1)
+	ADC temp_addr
+	STA temp_addr
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+
