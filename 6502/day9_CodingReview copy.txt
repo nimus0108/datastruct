@@ -1,0 +1,300 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Constant values
+;
+define x 	   $02		; Input "x" parameter
+define y	   $04		; Input "y" parameter
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Addresses
+;
+define ans_addr	   $01   	; Final answer will be stored at $0001. 
+define temp_addr   $02		; Temporary values can be stored at $0002.
+define temp_addr_2   $04    ; Temporary values can also be stored at $0004.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Main Program
+; -- Currently it is configured for testing function "g".
+; -- Update this function to test other methods.
+;	
+; -- Push x then y onto the stack
+; -- Call function g
+; -- The pop the result from the stack and store it in ans_addr
+LDA #x
+PHA 
+LDA #y
+PHA 
+JSR g
+PLA ; get result
+STA ans_addr
+PLA ; throw away x
+BRK
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; a(x) = 2x + 3
+;
+a:
+	;
+	; Load the "x" parameter from SP + 3
+	TSX
+	TXA
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	; Store "x" to a temp location, then add it back to the accumulator.
+	; This effectively gives us 2x
+	STA temp_addr
+	ADC temp_addr
+
+	; Add 3 to the accumulator, resulting in x+3
+	ADC #$03
+
+	; Store the result back on the stack and return.
+	STA $0100, Y
+	RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; b(x) = a(x+2) + a(x+1)
+;
+b:
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	STA $0100, Y
+
+	ADC #$01
+	PHA
+	JSR a
+
+	TSX
+	TXA
+	CLC
+	ADC #$04
+	TAY
+	STA $0100, Y
+
+	ADC #$02
+	PHA
+	JSR a
+
+	PLA
+	STA temp_addr
+
+	PLA
+	ADC temp_addr
+
+	STA temp_addr
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	
+	LDA temp_addr
+	STA $0100, Y
+
+
+	RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; c(x,y) = b(x) + 2 * a(y)
+;
+c:
+	;get y
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	;a(y)
+	PHA
+	JSR a
+
+	TSX
+	TXA
+	CLC
+	ADC #$04
+	TAY
+	LDA $0100, Y
+
+	PHA
+	JSR b
+
+	;b(X)
+	PLA
+	STA temp_addr
+	;a(y)
+	PLA
+	STA temp_addr_2
+	ADC temp_addr_2
+	STA temp_addr
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; d(x) = 5x + 7  
+;
+d: 
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	STA temp_addr
+	ADC temp_addr
+	ADC temp_addr
+	ADC temp_addr
+	ADC temp_addr
+
+	CLC
+	ADC #$07
+
+	STA temp_addr
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; e(x,y) = a(d(x+1)) + d(y)
+; 
+e: 
+	;getting y
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	;d(y)
+	PHA
+	JSR d
+
+	;getting x
+	TSX
+	TXA
+	CLC
+	ADC #$05
+	TAY
+	LDA $0100, Y
+
+	;d(x+1)
+	ADC #$01
+	PHA
+	JSR d
+
+	JRS a
+
+	PLA
+	STA temp_addr
+
+	PLA
+	ADC temp_addr
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; F(n) = 2 * F(n-1) - 3
+; F(0) = 4
+; 
+f: 
+	;
+	; Load the "n" parameter from SP + 3
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	;
+	; Check if n=0.  If so, then implement the base case of our recursion.
+	;
+	CMP #0
+	BEQ base_case
+
+	;
+	; If acc > 0, 
+	; then subtract 1 from n and make the recursive call.
+	SEC
+	SBC #$01
+	PHA 
+	JSR f
+
+	;
+	; Pull the result of the subroutine call.  This is the result of f(n-1)
+	PLA 
+	
+	; Double the accumulator  (2 * F(n-1))
+	STA temp_addr
+	ADC	temp_addr
+
+	; Subtract the 3 from the accumulator to complete the calculation
+	SEC
+	SBC #$03
+	JMP merged_code
+
+base_case:
+	; If n=0.... F(0) = 4
+	LDA #$04
+
+merged_code:
+	; Store the return value in the temp_addr for safe keeping while
+	; we calculate the return address.
+	STA temp_addr
+
+	;
+	; Calculate the address for the return value.
+	;
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+
+	;
+	; Reload the return value from temp_addr and then write it into the stack
+	;
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; g(x,y) = a(b(y+5)) + d(x+2)
+; 
+g:
+	;
+	; Implement! 
+	;
