@@ -1,0 +1,6 @@
+main(){
+  int i;
+  for(i=0; i<50; i++){
+    printf("%5d %5dn", i, i*i);
+  }
+}

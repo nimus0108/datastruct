@@ -295,6 +295,44 @@ merged_code:
 ; g(x,y) = a(b(y+5)) + d(x+2)
 ; 
 g:
-	;
-	; Implement! 
-	;
+	;GET Y 
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	TAY
+	LDA $0100, Y
+
+	CLC
+	ADC #$05
+	PHA
+	JSR b
+
+	JSR a
+
+	TSX
+	TXA
+	CLC
+	ADC #$05
+	TAY
+	LDA $0100, Y
+
+	CLC
+	ADC #$02
+	PHA
+	JSR d
+
+	PLA
+	STA temp_addr
+
+	PLA
+	ADC temp_addr
+
+	TSX
+	TXA
+	CLC
+	ADC #$03
+	LDA temp_addr
+	STA $0100, Y
+
+	RTS
