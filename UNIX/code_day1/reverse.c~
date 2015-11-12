@@ -16,10 +16,12 @@ void reverse (char* before, char* after){
 main (){
   char str_in[50];
   char str_out[50];
+  int len;
 
   printf("Please enter a string an I will reverse it!\n");
 
   gets (str_in);
+  len = strlen(str_in);
 
   reverse (str_in, str_out);
   printf ("Original String: %s\n", str_in);
