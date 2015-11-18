@@ -9,7 +9,7 @@ int sp=0;
 */
 int push (char c)
 {
-    if((sp) == (STACK_SIZE)) return -1;
+    if((sp) == (STACK_SIZE)-1) return -1;
     stack[sp++] = c;
     return 0;
 }
@@ -32,28 +32,51 @@ int pop ()
 */
 int main ()
 {
-    char ch, temp, pushed, pulled;
+    char ch, temp, pushed, expected;
     int error = 0;
+    int pushedError = 0;
+    int line = 1;
+    int nc = 1;
+    int pulled = 0;
+    ch = getchar();
 
     while((ch != EOF) && (error==0)){
-        ch = getchar();
-        printf("%c\n", ch);
-        if ((ch=="(") || (ch=="{") || (ch=="[")){
-            printf("yes");
-            pushed = push(ch);
-            if(pushed!=-1);
+        nc++;
+        if(pushed!=-1) pushed = ch;
+
+        if (ch=='\n'){
+            line++;
+            nc = 1;
         }
-        else if (ch==")" || ch=="}" || ch=="]"){
+
+        else if ((ch=='(') || (ch=='{') || (ch=='[')){
+            error = push(ch);
+            if(error==-1) 
+                printf("Error: Stack Full!\n");
+        }
+
+        else if (ch==')' || ch=='}' || ch==']'){
             pulled = pop();
-            if(pushed!=pulled){
-                printf("Errirrr");
+            if (pulled == -1) {
+                printf("Line: %d, Char: %d, Found %c, No matching character.\n", line, (--nc), pushed);
+                error = -1;
             }
-        }else {
-            printf("%c\n", ch);
+            if((pulled=='('))
+                expected=')';
+            else if((pulled=='{'))
+                expected='}';
+            else if((pulled=='['))
+                expected=']';
+            if(pushed!=expected){
+                printf("%c, %c\n", pushed, expected);
+                printf("Line: %d, Char: %d, Found %c, expected %c\n", line, (--nc), pushed, expected); 
+                error = -1;               
+            }
         }
-    }
+        ch = getchar();
+    } 
 
     if (error == 0){
-        printf("test");
+        printf("Well formatted input.\n");
     }
 }
