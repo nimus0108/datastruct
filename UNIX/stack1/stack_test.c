@@ -84,7 +84,7 @@ int main ()
   }
     
   result = push(101);
-  if (result == 0) 
+  if (result == -1) 
     printf ("Passed 9\n");
   else
     printf ("Failed 9\n");

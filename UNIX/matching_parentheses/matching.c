@@ -3,6 +3,17 @@
 char stack[STACK_SIZE];
 int sp=0;
 /*
+// while(ch!='\n' || ch!=EOF){
+//     // int num=0;
+//     // num++;
+//     ch = getchar();
+//     printf("%c\n", ch);
+// }
+// if(num>tnum){
+//     tnum=num;
+//     lineN = l;
+// }
+// l++;
 * Pushes character c onto the stack.
 * Returns 0 if successful.
 * Returns -1 if an error occurs. (Stack full).
@@ -51,7 +62,7 @@ int main ()
 
         else if ((ch=='(') || (ch=='{') || (ch=='[')){
             error = push(ch);
-            if(error==-1) 
+            if(error==-1)
                 printf("Error: Stack Full!\n");
         }
 
@@ -69,12 +80,12 @@ int main ()
                 expected=']';
             if(pushed!=expected){
                 printf("%c, %c\n", pushed, expected);
-                printf("Line: %d, Char: %d, Found %c, expected %c\n", line, (--nc), pushed, expected); 
-                error = -1;               
+                printf("Line: %d, Char: %d, Found %c, expected %c\n", line, (--nc), pushed, expected);
+                error = -1;
             }
         }
         ch = getchar();
-    } 
+    }
 
     if (error == 0){
         printf("Well formatted input.\n");

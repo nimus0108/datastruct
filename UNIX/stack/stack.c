@@ -1,66 +1,68 @@
-#define STACK_SIZE 100
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-char stack[STACK_SIZE];
+int stackSize = 0;
+double *stack = NULL;
 int sp=0;
 
-/************************
- * Push
- *
- * Pushes "d" onto the stack.
- * Returns 0 if successful.
- * Returns -1 if an error occurs because the stack is full.
- */
-int push (double d){
-	if((sp) == (STACK_SIZE)) return -1;
-    stack[sp++] = d;
+void expandStack(){
+  double *newStack;
+  int newSize = stackSize+10;
+  int i;
+
+  newStack = malloc(newSize*sizeof(double));
+  for(int i=0; i<stackSize; i++){
+    newStack[i] = stack[i];
+  }
+
+  if(stack!=NULL) free(stack);
+
+  stack = newStack;
+  stackSize = newSize;
+}
+
+
+int push (double d)
+{
+  /*  printf ("\nPushing %f.\n", d);*/
+  if (sp >= stackSize) {
+    expandStack();
+  }
+
+  stack[sp] = d;
+  sp++;
+
+  return 0;
+}
+
+double pop ()
+{
+  double pop;
+  if (sp == 0) {
+    return NAN;
+  }
+  pop = stack[--sp];
+  /*printf("\nPopping %f.\n", pop);*/
+  
+  return pop;
+}
+
+
+int isStackEmpty ()
+{
+  if (sp == 0)
+    return 1;
+  else
     return 0;
-};
+}
 
+int getStackSize()
+{
+  return sp;
+}
 
-/************************
- * pop
- *
- * Pops next double off the stack.
- * Returns the double if successful.
- * Returns NAN if an error occurs.  (Stack empty).
- */
-double pop (){
-	if((sp) == 0) return NAN;
-    return stack[--sp];
-};
-
-
-/************************
- * isStackEmpty
- *
- * If the stack is empty, returns 1 (true).  
- * Otherwise, returns 0 (false). 
- */
-int isStackEmpty (){
-	if(sp==0) return 1;
-	else return 0;
-};
-
-
-/************************
- * isStackEmpty
- *
- * Returns the current size of the stack. 
- */
-int getStackSize(){
-	return sp;
-};
-
-
-/************************
- * emptyStack
- *
- * Empties the stack entirely.  
- * After this call, getStackSize() should equal 0.
- */
-void emptyStack(){
-	sp=0;
-};
-
+void emptyStack()
+{
+  sp=0;
+}
